@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 		var err error
 		testDB, err = sql.Open("pgx", fmt.Sprintf(dsn, host, port, user, password, dbName))
 		if err != nil {
-			log.Println("Error:", err)
+			log.Println("error:", err)
 			return err
 		}
 		return testDB.Ping()
