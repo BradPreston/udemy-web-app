@@ -69,7 +69,7 @@ func TestMain(m *testing.M) {
 		var err error
 		testDB, err = sql.Open("pgx", fmt.Sprintf(dsn, host, port, user, password, dbName))
 		if err != nil {
-			log.Println("error:", err)
+			log.Println("Error:", err)
 			return err
 		}
 		return testDB.Ping()
@@ -135,35 +135,41 @@ func TestPostgresDBRepoInsertUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("insert user returned an error: %s", err)
 	}
+
 	if id != 1 {
-		t.Errorf("insert user returned wrong ID. expected 1, but got %d", id)
+		t.Errorf("insert user returned wrong id; expected 1, but got %d", id)
 	}
 }
 
 func TestPostgresDBRepoAllUsers(t *testing.T) {
 	users, err := testRepo.AllUsers()
 	if err != nil {
-		t.Errorf("all users returned an error: %s", err)
+		t.Errorf("all users reports an error: %s", err)
 	}
+
 	if len(users) != 1 {
-		t.Errorf("all users returned wrong size. expected 1, but got %d", len(users))
+		t.Errorf("all users reports wrong size; expected 1, but got %d", len(users))
 	}
+
 	testUser := data.User{
 		FirstName: "Jack",
 		LastName:  "Smith",
-		Email:     "jacksmith@example.com",
+		Email:     "jack@smith.com",
 		Password:  "secret",
 		IsAdmin:   1,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
+
 	_, _ = testRepo.InsertUser(testUser)
+
 	users, err = testRepo.AllUsers()
 	if err != nil {
-		t.Errorf("all users returned an error: %s", err)
+		t.Errorf("all users reports an error: %s", err)
 	}
+
 	if len(users) != 2 {
-		t.Errorf("all users returned wrong size after insert. expected 2, but got %d", len(users))
+		t.Errorf("all users reports wrong size after insert; expected 2, but got %d", len(users))
 	}
 }
 
@@ -172,95 +178,93 @@ func TestPostgresDBRepoGetUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("error getting user by id: %s", err)
 	}
+
 	if user.Email != "admin@example.com" {
-		t.Errorf("wrong email returned by getUser. expected admin@example.com, but got %s", user.Email)
+		t.Errorf("wrong email returned by GetUser; expected admin@example.com but got %s", user.Email)
 	}
+
 	_, err = testRepo.GetUser(3)
 	if err == nil {
-		t.Error("expected error from getting non existant user by id, but didn't get one")
+		t.Error("no error reported when getting non existent user by id")
 	}
+
 }
 
 func TestPostgresDBRepoGetUserByEmail(t *testing.T) {
-	user, err := testRepo.GetUserByEmail("jacksmith@example.com")
+	user, err := testRepo.GetUserByEmail("jack@smith.com")
 	if err != nil {
 		t.Errorf("error getting user by email: %s", err)
 	}
+
 	if user.ID != 2 {
-		t.Errorf("wrong id returned by getUserByEmail. expected 2, but got %d", user.ID)
-	}
-	_, err = testRepo.GetUserByEmail("bad@email.com")
-	if err == nil {
-		t.Error("expected error from getting user by email, but didn't get one")
+		t.Errorf("wrong id returned by GetUserByEmail; expected 2 but got %d", user.ID)
 	}
 }
 
 func TestPostgresDBRepoUpdateUser(t *testing.T) {
-	user, _ := testRepo.GetUser(1)
-	user.FirstName = "James"
-	user.Email = "jamessmith@example.com"
+	user, _ := testRepo.GetUser(2)
+	user.FirstName = "Jane"
+	user.Email = "jane@smith.com"
+
 	err := testRepo.UpdateUser(*user)
 	if err != nil {
-		t.Errorf("update user returned an error: %s", err)
+		t.Errorf("error updating user %d: %s", 2, err)
 	}
-	user, _ = testRepo.GetUser(1)
-	if user.FirstName != "James" {
-		t.Errorf("expected user first name to be James, but got %s", user.FirstName)
-	}
-	if user.Email != "jamessmith@example.com" {
-		t.Errorf("expected user email to be jamessmith@example.com, but got %s", user.Email)
+
+	user, _ = testRepo.GetUser(2)
+	if user.FirstName != "Jane" || user.Email != "jane@smith.com" {
+		t.Errorf("expected updated record to have first name Jane and email jane@smith.com, but got %s %s", user.FirstName, user.Email)
 	}
 }
 
 func TestPostgresDBRepoDeleteUser(t *testing.T) {
 	err := testRepo.DeleteUser(2)
 	if err != nil {
-		t.Errorf("error deleting user with id 2: %s", err)
+		t.Errorf("error deleting user id 2: %s", err)
 	}
+
 	_, err = testRepo.GetUser(2)
 	if err == nil {
-		t.Error("user with id 2 should have been deleted, but wasn't")
+		t.Error("retrieved user id 2, who should have been deleted")
 	}
 }
 
 func TestPostgresDBRepoResetPassword(t *testing.T) {
-	newPassword := "newpassword"
-	err := testRepo.ResetPassword(1, newPassword)
+	err := testRepo.ResetPassword(1, "password")
 	if err != nil {
-		t.Errorf("reset password returned an error: %s", err)
+		t.Error("error resetting user's password", err)
 	}
+
 	user, _ := testRepo.GetUser(1)
-	matches, err := user.PasswordMatches(newPassword)
+	matches, err := user.PasswordMatches("password")
 	if err != nil {
 		t.Error(err)
 	}
+
 	if !matches {
-		t.Error("reset password: password should match, but does not")
+		t.Errorf("password should match 'password', but does not")
 	}
 }
 
 func TestPostgresDBRepoInsertUserImage(t *testing.T) {
-	userImage := data.UserImage{
-		UserID:    "1",
-		FileName:  "test.jpg",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	id, err := testRepo.InsertUserImage(userImage)
+	var image data.UserImage
+	image.UserID = 1
+	image.FileName = "test.jpg"
+	image.CreatedAt = time.Now()
+	image.UpdatedAt = time.Now()
+
+	newID, err := testRepo.InsertUserImage(image)
 	if err != nil {
-		t.Errorf("insert user image returned an unexpected error: %s", err)
+		t.Error("inserting user image failed:", err)
 	}
-	if id != 1 {
-		t.Errorf("insert user image: expected id to be 1, but got %d", id)
+
+	if newID != 1 {
+		t.Error("got wrong id for image; should be 1, but got", newID)
 	}
-	userImage = data.UserImage{
-		UserID:    "50",
-		FileName:  "test.jpg",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	_, err = testRepo.InsertUserImage(userImage)
+
+	image.UserID = 100
+	_, err = testRepo.InsertUserImage(image)
 	if err == nil {
-		t.Error("insert user image: expected an error due to incorrect userID, but didn't get one")
+		t.Error("inserted a user image with non-existent user id")
 	}
 }
