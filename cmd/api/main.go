@@ -11,10 +11,10 @@ import (
 
 const port = 8090
 
-type application struct{
-	DSN string
-	DB repository.DatabaseRepo
-	Domain string
+type application struct {
+	DSN       string
+	DB        repository.DatabaseRepo
+	Domain    string
 	JWTSecret string
 }
 
@@ -34,7 +34,7 @@ func main() {
 	app.DB = &dbrepo.PostgresDBRepo{DB: conn}
 
 	log.Printf("starting api on port %d\n", port)
-	
+
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), app.routes())
 	if err != nil {
 		log.Fatal(err)
