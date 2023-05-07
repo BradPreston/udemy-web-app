@@ -23,7 +23,7 @@ func Test_application_routes(t *testing.T) {
 	for _, route := range registered {
 		// check to see if the route exists
 		if !routeExists(route.route, route.method, chiRoutes) {
-			t.Errorf("rout %s is not registered", route.route)
+			t.Errorf("route %s is not registered", route.route)
 		}
 	}
 }
