@@ -64,7 +64,7 @@ func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if time.Unix(claims.ExpiresAt.Unix(), 0).Sub(time.Now()) > 30*time.Second {
+	if time.Until(time.Unix(claims.ExpiresAt.Unix(), 0)) > 30*time.Second {
 		app.errorJSON(w, errors.New("refresh token does not need renewed yet"), http.StatusTooEarly)
 		return
 	}
