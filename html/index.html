@@ -61,7 +61,64 @@
 </div>
 
 <script>
+    // store the access token in memory - only safe place
+    let access_token = "";
+    let refresh_token = "";
 
+    // get references to UI elements
+    const loginForm = document.getElementById("login-form");
+    const loginBtn = document.getElementById("login");
+    const userBtn = document.getElementById("getUserBtn");
+    const userOutput = document.getElementById("user-output");
+    const tokensDiv = document.getElementById("tokens");
+    const tokenDisplay = document.getElementById("token");
+    const refreshTokenDisplay = document.getElementById("refresh");
+    const logoutBtn = document.getElementById("logout");
+
+    loginBtn.addEventListener("click", function() {
+        const payload = {
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+        }
+
+        const requestOptions = {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        }
+
+        fetch("/web/auth", requestOptions)
+            .then(res => res.json())
+            .then(data => {
+                if (data.access_token) {
+                    access_token = data.access_token;
+                    refresh_token = data.refresh_token;
+                    setUI(true);
+                }
+            })
+            .catch(err => alert(err));
+    });
+
+    function setUI(loggedIn) {
+        if (loggedIn) {
+            tokensDiv.classList.remove("d-none");
+            loginForm.classList.add("d-none");
+            logoutBtn.classList.remove("d-none");
+            tokenDisplay.innerHTML = access_token;
+            refreshTokenDisplay.innerHTML = refresh_token;
+        } else {
+            tokensDiv.classList.add("d-none");
+            loginForm.classList.remove("d-none");
+            logoutBtn.classList.add("d-none");
+            document.getElementById("password").value = "";
+            userOutput.innerHTML = "Nothing from server yet...";
+            tokenDisplay.innerHTML = "No token!";
+            refreshTokenDisplay.innerHTML = "No refresh token!";
+        }
+    }
 </script>
 
 </body>
