@@ -43,6 +43,19 @@ func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, errors.New("unauthorized"), http.StatusUnauthorized)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "__Host-refresh_token",
+		Path:     "/",
+		Value:    tokenPairs.RefreshToken,
+		Expires:  time.Now().Add(refreshTokenExpiry),
+		MaxAge:   int(refreshTokenExpiry.Seconds()),
+		SameSite: http.SameSiteStrictMode,
+		Domain:   "localhost",
+		HttpOnly: true,
+		Secure:   true,
+	})
+
 	// send token to user
 	_ = app.writeJSON(w, http.StatusOK, tokenPairs)
 }
@@ -84,7 +97,7 @@ func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	TokenPairs, err := app.generateTokenPair(user)
+	tokenPairs, err := app.generateTokenPair(user)
 	if err != nil {
 		app.errorJSON(w, err, http.StatusBadRequest)
 		return
@@ -93,7 +106,7 @@ func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "__Host-refresh_token",
 		Path:     "/",
-		Value:    TokenPairs.RefreshToken,
+		Value:    tokenPairs.RefreshToken,
 		Expires:  time.Now().Add(refreshTokenExpiry),
 		MaxAge:   int(refreshTokenExpiry.Seconds()),
 		SameSite: http.SameSiteStrictMode,
@@ -102,7 +115,7 @@ func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	})
 
-	_ = app.writeJSON(w, http.StatusOK, TokenPairs)
+	_ = app.writeJSON(w, http.StatusOK, tokenPairs)
 }
 
 func (app *application) allUsers(w http.ResponseWriter, r *http.Request) {
