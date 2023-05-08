@@ -75,6 +75,23 @@
     const refreshTokenDisplay = document.getElementById("refresh");
     const logoutBtn = document.getElementById("logout");
 
+    // log user in if user has valid __Host-refresh_token cookie
+    document.addEventListener("DOMContentLoaded", refreshTokens());
+
+    let refreshRunning = false;
+    const refreshTime = new Date();
+    const secondsRemaining = (600 - refreshTime.getSeconds()) * 1000;
+    // const secondsRemaining = (5 - refreshTime.getSeconds()) * 1000; // 5 seconds
+
+    function autoRefresh() {
+        if (!refreshRunning) {
+            setTimeout(() => {
+                if (access_token !== "") setInterval(refreshTokens, 10 * 60 * 1000); // 10 minutes
+            }, secondsRemaining);
+        }
+        refreshRunning = true;
+    }
+
     loginBtn.addEventListener("click", function() {
         const payload = {
             email: document.getElementById("email").value,
@@ -97,10 +114,33 @@
                     access_token = data.access_token;
                     refresh_token = data.refresh_token;
                     setUI(true);
+                    autoRefresh();
                 }
             })
             .catch(err => alert(err));
     });
+
+    function refreshTokens() {
+        // send a GET request that includes the __Host-refresh-token cookie if it exists
+        const requestOptions = {
+            method: "GET",
+            credentials: "include"
+        }
+
+        fetch("/web/refresh-token", requestOptions)
+            .then(res => res.json())
+            .then(data => {
+                if (data.access_token) {
+                    access_token = data.access_token;
+                    refresh_token = data.refresh_token;
+                    setUI(true);
+                    autoRefresh();
+                } else {
+                    setUI(false);
+                }
+            })
+            .catch(err => console.log("user is not logged in"));
+    }
 
     function setUI(loggedIn) {
         if (loggedIn) {
