@@ -120,6 +120,22 @@
             .catch(err => alert(err));
     });
 
+    userBtn.addEventListener("click", function() {
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${access_token}`);
+
+        const requestOptions = {
+            method: "GET",
+            headers: headers
+        }
+
+        fetch("/users/2", requestOptions)
+            .then(res => res.json())
+            .then(data => userOutput.innerHTML = JSON.stringify(data, undefined, 4))
+            .catch(err => userOutput.innerHTML = "Log in first!");
+    })
+
     function refreshTokens() {
         // send a GET request that includes the __Host-refresh-token cookie if it exists
         const requestOptions = {
