@@ -175,6 +175,15 @@
             refreshTokenDisplay.innerHTML = "No refresh token!";
         }
     }
+
+    logoutBtn.addEventListener("click", function() {
+        access_token = "";
+        refresh_token = "";
+
+        fetch("/web/logout", { method: "GET" })
+            .then(res => setUI(false))
+            .catch(err => userOutput.innerHTML = err);
+    });
 </script>
 
 </body>
